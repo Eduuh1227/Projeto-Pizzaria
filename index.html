@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pizzaria Realeza | Peça sua pizza pelo WhatsApp</title>
+    <meta
+      name="description"
+      content="Conheça o cardápio da Pizzaria Realeza, escolha seus sabores favoritos e faça seu pedido de maneira rápida pelo WhatsApp."
+    />
+    <meta name="theme-color" content="#A61B1B" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Pizzaria Realeza | Peça sua pizza pelo WhatsApp" />
+    <meta
+      property="og:description"
+      content="Cardápio digital da Pizzaria Realeza com pizzas, fogazzas, bebidas, personalização e pedido pelo WhatsApp."
+    />
+    <meta property="og:image" content="assets/hero-pizza.png" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23A61B1B'/%3E%3Cpath d='M12 40c8-17 23-26 42-24-8 15-21 24-42 24Z' fill='%23F4B942'/%3E%3Cpath d='M21 36c5-8 14-13 25-14-5 7-13 12-25 14Z' fill='%23FFF2D8'/%3E%3Ccircle cx='30' cy='29' r='3' fill='%23D62828'/%3E%3Ccircle cx='40' cy='24' r='3' fill='%23278A35'/%3E%3Cpath d='M14 44h36' stroke='%23FFF2D8' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css?v=20260916-checkout-2" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "name": "Pizzaria Realeza",
+        "servesCuisine": "Pizza",
+        "telephone": "+55 11 99007-3671",
+        "priceRange": "$$",
+        "acceptsReservations": false,
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Endereço a confirmar",
+          "addressLocality": "São Paulo",
+          "addressRegion": "SP",
+          "addressCountry": "BR"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header" id="top">
+      <a class="brand" href="#inicio" aria-label="Pizzaria Realeza">
+        <span class="brand-mark">RZ</span>
+        <span>
+          <strong>Pizzaria Realeza</strong>
+          <small>Cardápio digital</small>
+        </span>
+      </a>
+
+      <button class="icon-button menu-toggle" type="button" aria-label="Abrir menu" data-menu-toggle>
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="main-nav" data-main-nav>
+        <a href="#inicio">Início</a>
+        <a href="#cardapio">Cardápio</a>
+        <a href="#como-pedir">Como pedir</a>
+        <a href="#contato">Contato</a>
+      </nav>
+
+      <div class="header-actions">
+        <span class="status-pill" data-open-status>Calculando...</span>
+        <button class="cart-button" type="button" data-open-cart>
+          <span>Carrinho</span>
+          <strong data-cart-count>0</strong>
+        </button>
+        <a class="order-shortcut" href="#cardapio">Fazer pedido</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="inicio">
+        <div class="hero-content reveal">
+          <p class="eyebrow">Pedido fácil pelo WhatsApp</p>
+          <h1>A verdadeira realeza está no sabor</h1>
+          <p>
+            Pizzas preparadas com ingredientes selecionados, muito recheio e aquele sabor que conquista.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#cardapio">Ver cardápio</a>
+            <button class="button ghost" type="button" data-whatsapp-start>Pedir pelo WhatsApp</button>
+          </div>
+          <div class="hero-highlights" aria-label="Destaques">
+            <span>Ingredientes selecionados</span>
+            <span>Entrega rápida</span>
+            <span>Pedido fácil</span>
+          </div>
+        </div>
+        <div class="hero-media reveal">
+          <img
+            src="assets/hero-pizza.png"
+            alt="Pizza de pepperoni com queijo derretido"
+          />
+        </div>
+      </section>
+
+      <section class="info-strip reveal" aria-label="Informações do estabelecimento">
+        <article>
+          <span>Entrega</span>
+          <strong data-config="deliveryTime">45 a 70 min</strong>
+        </article>
+        <article>
+          <span>Pagamento</span>
+          <strong data-config="payments">Pix, dinheiro e cartões</strong>
+        </article>
+        <article>
+          <span>Retirada</span>
+          <strong>No balcão</strong>
+        </article>
+        <article>
+          <span>Funcionamento</span>
+          <strong data-config="hours">Terça a quinta 18h-23h; sexta e sábado 18h-23h30; domingo 18h-23h</strong>
+        </article>
+      </section>
+
+      <section class="menu-section" id="cardapio">
+        <div class="section-heading reveal">
+          <p class="eyebrow">Cardápio completo</p>
+          <h2>Escolha, personalize e envie o pedido</h2>
+          <p>Pesquise por sabor, ingrediente ou categoria. Os itens sinalizados como demonstração podem ser ajustados no código.</p>
+        </div>
+
+        <div class="menu-tools reveal">
+          <label class="search-box">
+            <span>Buscar</span>
+            <input type="search" placeholder="Busque por pizza, ingrediente ou sabor..." data-search />
+          </label>
+          <div class="filter-row" aria-label="Filtros">
+            <button type="button" class="chip active" data-filter="all">Todos</button>
+            <button type="button" class="chip" data-filter="price-asc">Menor preço</button>
+            <button type="button" class="chip" data-filter="price-desc">Maior preço</button>
+          </div>
+        </div>
+
+        <div class="category-tabs" data-category-tabs aria-label="Categorias do cardápio"></div>
+        <div class="product-grid" data-products></div>
+        <div class="empty-state" data-empty hidden>
+          <strong>Nenhum item encontrado.</strong>
+          <span>Tente outro termo ou remova os filtros.</span>
+        </div>
+      </section>
+
+      <section class="steps" id="como-pedir">
+        <div class="section-heading reveal">
+          <p class="eyebrow">Como pedir</p>
+          <h2>Do cardápio ao WhatsApp em três passos</h2>
+        </div>
+        <div class="step-grid">
+          <article class="step-card reveal">
+            <span>1</span>
+            <h3>Escolha seus sabores</h3>
+            <p>Use a busca, navegue pelas categorias e escolha pizza inteira ou meio a meio.</p>
+          </article>
+          <article class="step-card reveal">
+            <span>2</span>
+            <h3>Personalize e confira</h3>
+            <p>Selecione tamanho, borda, adicionais, ingredientes removidos e quantidades.</p>
+          </article>
+          <article class="step-card reveal">
+            <span>3</span>
+            <h3>Envie pelo WhatsApp</h3>
+            <p>Preencha os dados de entrega ou retirada e envie a mensagem pronta.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="contact" id="contato">
+        <div class="contact-card reveal">
+          <p class="eyebrow">Contato</p>
+          <h2>Pizzaria Realeza</h2>
+          <ul>
+            <li><strong>Endereço:</strong> <span data-config="address">Endereço a confirmar</span></li>
+            <li><strong>Telefone:</strong> <span data-config="phone">(11) 99007-3671</span></li>
+            <li><strong>WhatsApp:</strong> <span data-config="whatsapp">(11) 99007-3671</span></li>
+            <li><strong>Instagram:</strong> <span data-config="instagram">@pizzariarealeza</span></li>
+            <li><strong>Horário:</strong> <span data-config="hoursFull">Horários a confirmar</span></li>
+          </ul>
+          <div class="contact-actions">
+            <a class="button primary" data-maps-link target="_blank" rel="noreferrer">Como chegar</a>
+            <button class="button ghost" type="button" data-whatsapp-start>Chamar no WhatsApp</button>
+          </div>
+        </div>
+        <div class="hours-card reveal">
+          <p class="eyebrow">Atendimento</p>
+          <h2>Dias e horários</h2>
+          <div class="hours-list" data-hours-list></div>
+        </div>
+        <div class="notice reveal">
+          <strong>Aviso</strong>
+          <p>Preços, horários, taxas e disponibilidade podem sofrer alterações.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© <span data-year></span> Pizzaria Realeza. Todos os direitos reservados.</span>
+      <span>Formas de pagamento: Pix, dinheiro, débito e crédito na entrega.</span>
+    </footer>
+
+    <button class="floating-whatsapp" type="button" aria-label="Pedir pelo WhatsApp" data-whatsapp-start>WhatsApp</button>
+
+    <button class="mobile-cart-bar" type="button" data-open-cart>
+      <span>Ver carrinho</span>
+      <strong><span data-cart-mobile-count>0</span> itens • <span data-cart-mobile-total>R$ 0,00</span></strong>
+    </button>
+
+    <aside class="cart-drawer" data-cart-drawer aria-hidden="true">
+      <div class="drawer-panel">
+        <header>
+          <div>
+            <p class="eyebrow">Seu pedido</p>
+            <h2>Carrinho</h2>
+          </div>
+          <button class="icon-button" type="button" aria-label="Fechar carrinho" data-close-cart>×</button>
+        </header>
+        <div class="cart-items" data-cart-items></div>
+        <div class="coupon-row">
+          <input type="text" placeholder="Cupom de desconto" data-coupon />
+          <button type="button" data-apply-coupon>Aplicar</button>
+        </div>
+        <div class="cart-summary">
+          <div><span>Subtotal</span><strong data-subtotal>R$ 0,00</strong></div>
+          <div><span>Desconto</span><strong data-discount>R$ 0,00</strong></div>
+          <div class="total"><span>Total</span><strong data-total>R$ 0,00</strong></div>
+        </div>
+        <button class="button ghost full" type="button" data-clear-cart>Limpar carrinho</button>
+        <button class="button primary full" type="button" data-checkout>Finalizar pedido</button>
+      </div>
+    </aside>
+
+    <dialog class="product-modal" data-product-modal>
+      <form method="dialog" class="modal-panel" data-product-form>
+        <button class="icon-button modal-close" type="button" aria-label="Fechar" data-close-modal>×</button>
+        <div class="modal-layout">
+          <div class="modal-image">
+            <img data-modal-image alt="" />
+          </div>
+          <div class="modal-content">
+            <p class="eyebrow" data-modal-category></p>
+            <h2 data-modal-name></h2>
+            <p data-modal-desc></p>
+            <div class="modal-options" data-modal-options></div>
+            <div class="price-preview">
+              <span>Preço atualizado</span>
+              <strong data-modal-price>R$ 0,00</strong>
+            </div>
+            <button class="button primary full" type="submit">Adicionar ao carrinho</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="checkout-modal" data-checkout-modal>
+      <form method="dialog" class="checkout-panel" data-checkout-form>
+        <button class="icon-button modal-close" type="button" aria-label="Fechar" data-close-checkout>×</button>
+        <div class="section-heading compact">
+          <p class="eyebrow">Finalização</p>
+          <h2>Dados para o pedido</h2>
+          <p data-closed-warning hidden></p>
+        </div>
+
+        <div class="form-grid">
+          <label>Nome completo<input name="name" required autocomplete="name" /></label>
+          <label>Telefone<input name="phone" required inputmode="tel" autocomplete="tel" /></label>
+          <label class="span-2">Forma de recebimento
+            <select name="fulfillment" required data-fulfillment>
+              <option value="delivery">Entrega</option>
+              <option value="pickup">Retirada</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="address-fields" data-address-fields>
+          <div class="form-grid">
+            <label>CEP<input name="cep" inputmode="numeric" autocomplete="postal-code" /></label>
+            <label>Rua<input name="street" /></label>
+            <label>Número<input name="number" /></label>
+            <label>Complemento<input name="complement" /></label>
+            <label>Bairro<input name="neighborhood" data-neighborhood autocomplete="address-level3" placeholder="Digite seu bairro" /></label>
+            <label class="span-2">Ponto de referência<input name="reference" autocomplete="off" placeholder="Ex.: portão, comércio próximo ou detalhe da entrega" /></label>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <label>Pagamento
+            <select name="payment" required data-payment>
+              <option value="Pix">Pix</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão de débito na entrega">Cartão de débito na entrega</option>
+              <option value="Cartão de crédito na entrega">Cartão de crédito na entrega</option>
+            </select>
+          </label>
+          <label class="change-field is-hidden" data-change-wrapper hidden aria-hidden="true">Precisa de troco para quanto?
+            <input name="changeFor" inputmode="decimal" placeholder="Ex.: 100,00" disabled />
+          </label>
+          <label class="span-2">Observações gerais<textarea name="generalNotes" rows="3"></textarea></label>
+        </div>
+
+        <div class="pix-note" data-pix-note>Os dados para pagamento Pix serão confirmados pelo estabelecimento no WhatsApp.</div>
+
+        <div class="cart-summary checkout-summary">
+          <div><span>Subtotal</span><strong data-checkout-subtotal>R$ 0,00</strong></div>
+          <div><span>Desconto</span><strong data-checkout-discount>R$ 0,00</strong></div>
+          <div class="total"><span>Total</span><strong data-checkout-total>R$ 0,00</strong></div>
+        </div>
+
+        <button class="button primary full" type="submit">Enviar pedido pelo WhatsApp</button>
+      </form>
+    </dialog>
+
+    <dialog class="success-modal" data-success-modal>
+      <div class="success-panel">
+        <button class="icon-button modal-close" type="button" aria-label="Fechar" data-close-success>×</button>
+        <p class="eyebrow">Pedido preparado</p>
+        <h2>Agora é só confirmar no WhatsApp</h2>
+        <p>A mensagem foi montada com os itens e valores do carrinho. O carrinho continua salvo até você limpar ou iniciar um novo pedido.</p>
+        <div class="success-actions">
+          <a class="button primary" data-reopen-whatsapp target="_blank" rel="noreferrer">Abrir WhatsApp novamente</a>
+          <button class="button ghost" type="button" data-new-order>Fazer novo pedido</button>
+        </div>
+      </div>
+    </dialog>
+
+    <div class="toast" data-toast aria-live="polite"></div>
+
+    <script src="script.js?v=20260916-checkout-2"></script>
+  </body>
+</html>
