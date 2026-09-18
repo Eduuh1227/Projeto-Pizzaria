@@ -182,24 +182,43 @@ img {
 }
 
 .cart-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 999px;
-  background: var(--brown);
-  color: var(--white);
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: transparent;
+  color: #171717;
   font-weight: 850;
-  padding: 9px 12px;
+  padding: 8px;
+}
+
+.cart-icon {
+  width: 28px;
+  height: 28px;
 }
 
 .cart-button strong {
+  position: absolute;
+  top: -4px;
+  right: -6px;
   display: grid;
   place-items: center;
-  min-width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--gold);
-  color: var(--brown);
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  border: 2px solid var(--white);
+  border-radius: 999px;
+  background: var(--red);
+  color: var(--white);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.cart-button strong[hidden] {
+  display: none;
 }
 
 .cart-button.bump strong,
@@ -1107,6 +1126,21 @@ dialog::backdrop {
 .form-grid label {
   display: grid;
   gap: 6px;
+}
+
+.cep-status {
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.cep-status:empty {
+  display: none;
+}
+
+.cep-status[data-error="true"] {
+  color: var(--red);
 }
 
 .span-2 {

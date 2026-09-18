@@ -482,6 +482,7 @@ function bindEvents() {
   });
   els.payment.addEventListener("change", updatePaymentVisibility);
   els.payment.addEventListener("input", updatePaymentVisibility);
+  bindCepLookup();
   els.checkoutForm.addEventListener("submit", handleCheckout);
 
   document.querySelector("[data-close-success]").addEventListener("click", () => els.successModal.close());
@@ -492,6 +493,90 @@ function bindEvents() {
     els.successModal.close();
     location.hash = "cardapio";
   });
+}
+
+function bindCepLookup() {
+  const cep = els.checkoutForm.elements.cep;
+  const status = document.querySelector("#cep-status");
+  const fields = [els.checkoutForm.elements.street, els.neighborhood];
+  const filledValues = new Map();
+  let debounce;
+  let controller;
+  let lastResolved = "";
+
+  function showStatus(message, error = false) {
+    status.textContent = message;
+    status.dataset.error = String(error);
+  }
+
+  async function lookup() {
+    clearTimeout(debounce);
+    const digits = cep.value.replace(/\D/g, "");
+    if (digits.length !== 8 || digits === lastResolved || controller) return;
+    const request = new AbortController();
+    controller = request;
+    const originalValues = fields.map(field => field.value);
+    cep.setAttribute("aria-busy", "true");
+    cep.setCustomValidity("Aguarde a consulta do CEP.");
+    showStatus("Buscando endereço...");
+    const timeout = setTimeout(() => request.abort(), 8000);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`, { signal: request.signal });
+      if (!response.ok) throw new Error("CEP lookup failed");
+      const address = await response.json();
+      if (controller !== request || cep.value.replace(/\D/g, "") !== digits) return;
+      cep.setCustomValidity("");
+      if (address.erro) {
+        showStatus("CEP não encontrado. Confira o CEP ou preencha o endereço manualmente.", true);
+        return;
+      }
+      if (address.uf !== "SP" || address.localidade !== "São Paulo") {
+        const message = "Entregamos somente na cidade de São Paulo. Confira o CEP ou selecione retirada.";
+        cep.setCustomValidity(message);
+        showStatus(message, true);
+        lastResolved = digits;
+        return;
+      }
+      const values = [address.logradouro, address.bairro];
+      fields.forEach((field, index) => {
+        // Preserve edits made while the address request was in flight.
+        if (field.value === originalValues[index] && typeof values[index] === "string" && values[index]) {
+          field.value = values[index];
+          filledValues.set(field, field.value);
+        }
+      });
+      lastResolved = digits;
+      showStatus(values.every(Boolean) ? "Endereço encontrado. Informe o número." : "CEP encontrado. Complete os campos de endereço.");
+    } catch {
+      if (controller !== request) return;
+      cep.setCustomValidity("");
+      showStatus("Não foi possível consultar o CEP. Preencha o endereço manualmente.", true);
+    } finally {
+      clearTimeout(timeout);
+      if (controller === request) {
+        controller = null;
+        cep.removeAttribute("aria-busy");
+      }
+    }
+  }
+
+  cep.addEventListener("input", () => {
+    clearTimeout(debounce);
+    controller?.abort();
+    controller = null;
+    lastResolved = "";
+    cep.removeAttribute("aria-busy");
+    const digits = cep.value.replace(/\D/g, "").slice(0, 8);
+    cep.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+    for (const [field, value] of filledValues) {
+      if (field.value === value) field.value = "";
+    }
+    filledValues.clear();
+    cep.setCustomValidity(digits && digits.length !== 8 ? "Informe os 8 dígitos do CEP." : "");
+    showStatus("");
+    if (digits.length === 8) debounce = setTimeout(lookup, 350);
+  });
+  cep.addEventListener("blur", lookup);
 }
 
 function renderCategories() {
@@ -730,7 +815,9 @@ function renderCart(bump = false) {
 
   const totals = calculateTotals();
   const count = state.cart.reduce((sum, item) => sum + item.quantity, 0);
-  els.cartCount.textContent = count;
+  els.cartCount.textContent = count > 99 ? "99+" : count;
+  els.cartCount.hidden = count === 0;
+  els.cartCount.closest("button").setAttribute("aria-label", count ? `Abrir carrinho com ${count} ${count === 1 ? "item" : "itens"}` : "Abrir carrinho vazio");
   els.cartMobileCount.textContent = count;
   els.cartMobileTotal.textContent = money(totals.total);
   els.subtotal.textContent = money(totals.subtotal);
@@ -885,6 +972,7 @@ function updateCheckoutVisibility() {
   els.addressFields.querySelectorAll("input, select").forEach((field) => {
     const requiredNames = ["street", "number", "neighborhood"];
     field.required = !pickup && requiredNames.includes(field.name);
+    field.disabled = pickup;
   });
 }
 
