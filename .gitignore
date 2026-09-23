@@ -7,3 +7,13 @@ node_modules/
 .DS_Store
 Thumbs.db
 *.log
+.data/
+.vercel/
+public/
+test-results/
+.agents/
+skills-lock.json
+
+.vercel
+.env*
+!.env.example

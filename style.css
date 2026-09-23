@@ -1177,6 +1177,17 @@ dialog::backdrop {
   justify-content: center;
 }
 
+.checkout-error {
+  margin: 12px 0;
+  padding: 12px;
+  border-left: 3px solid #ac1d26;
+  color: #8b1620;
+  background: #fff0f1;
+  overflow-wrap: anywhere;
+}
+
+.checkout-error[hidden] { display: none; }
+
 .toast {
   position: fixed;
   left: 50%;

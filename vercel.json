@@ -1,0 +1,35 @@
+{
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "regions": ["gru1"],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "projeto-pizzaria-eduardo-oliveiras-projects-9e8e2497.vercel.app" }],
+      "destination": "https://projeto-pizzaria-mu.vercel.app/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "projeto-pizzaria-git-main-eduardo-oliveiras-projects-9e8e2497.vercel.app" }],
+      "destination": "https://projeto-pizzaria-mu.vercel.app/:path*",
+      "permanent": true
+    }
+  ],
+  "functions": {
+    "api/backend.js": { "maxDuration": 30 }
+  },
+  "headers": [
+    { "source": "/(.*)", "headers": [
+      { "key": "X-Content-Type-Options", "value": "nosniff" },
+      { "key": "Referrer-Policy", "value": "same-origin" },
+      { "key": "X-Frame-Options", "value": "DENY" }
+    ] },
+    { "source": "/admin/(.*)", "headers": [
+      { "key": "Cache-Control", "value": "no-store" },
+      { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'none'" },
+      { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+    ] }
+  ]
+}

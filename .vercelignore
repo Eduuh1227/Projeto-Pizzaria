@@ -1,0 +1,10 @@
+.git/
+.data/
+.env
+.env.*
+node_modules/
+tests/
+test-results/
+.agents/
+skills-lock.json
+*.log

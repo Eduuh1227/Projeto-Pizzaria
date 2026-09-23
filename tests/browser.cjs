@@ -1,0 +1,131 @@
+const assert = require('node:assert/strict');
+const { chromium } = require('playwright');
+const { spawn } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const net = require('node:net');
+const { randomUUID } = require('node:crypto');
+delete process.env.DATABASE_URL;
+delete process.env.VERCEL;
+process.env.NODE_ENV = 'test';
+const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'realeza-browser-'));
+process.env.SQLITE_PATH = path.join(directory, 'browser.sqlite');
+const db = require('../server/db.cjs');
+const { hashPassword } = require('../server/auth.cjs');
+const root = path.resolve(__dirname, '..');
+const screenshots = path.join(root, 'test-results');
+let server;
+let browser;
+async function port() {
+  const socket = net.createServer();
+  await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
+  const value = socket.address().port;
+  await new Promise(resolve => socket.close(resolve));
+  return value;
+}
+async function noOverflow(page) {
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'Page overflows horizontally');
+  if (await page.locator('#detail').isVisible()) {
+    assert.equal(await page.locator('#detail').evaluate(el => el.scrollWidth <= el.clientWidth), true, 'Detail drawer overflows');
+  }
+}
+(async () => {
+  fs.mkdirSync(screenshots, { recursive: true });
+  const password = randomUUID();
+  await db.query('INSERT INTO admins(email,password_hash,created_at) VALUES($1,$2,$3)', ['browser@example.com', await hashPassword(password), new Date().toISOString()]);
+  const localPort = await port();
+  const origin = `http://127.0.0.1:${localPort}`;
+  server = spawn(process.execPath, ['scripts/dev.cjs'], { cwd: root, env: { ...process.env, PORT: String(localPort), APP_ORIGIN: origin }, stdio: ['ignore', 'pipe', 'pipe'] });
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Local server did not start')), 15000);
+    server.stdout.on('data', data => { if (String(data).includes('Admin:')) { clearTimeout(timeout); resolve(); } });
+    server.once('exit', code => reject(new Error(`Server exited: ${code}`)));
+  });
+  browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}) });
+  const errors = [];
+  const customer = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await customer.newPage();
+  page.on('pageerror', error => errors.push(error.message));
+  await page.route('https://**/*', route => route.abort());
+  await page.goto(`${origin}/?test=1`);
+  await page.getByRole('button', { name: 'Adicionar Calabresa', exact: true }).click();
+  await page.locator('[data-product-form] button[type=submit]').click();
+  await page.locator('[data-open-cart]').first().click();
+  await page.locator('[data-checkout]').click();
+  const form = page.locator('[data-checkout-form]');
+  await form.locator('[name=name]').fill('Cliente Teste Browser');
+  await form.locator('[name=phone]').fill('11999999999');
+  await form.locator('[name=fulfillment]').selectOption('pickup');
+  await form.locator('[name=generalNotes]').fill('<img src=x onerror=alert(1)> Sem cebola, por favor.');
+  await page.route('**/api/backend?action=orders', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Conexão temporariamente indisponível.' }) }));
+  await form.locator('button[type=submit]').click();
+  await form.locator('[data-checkout-error]:not([hidden])').waitFor();
+  assert.match(await form.locator('[data-checkout-error]').innerText(), /temporariamente indisponível/);
+  assert.equal(await page.locator('[data-success-modal]').isVisible(), false);
+  assert.equal(await form.locator('[name=name]').inputValue(), 'Cliente Teste Browser');
+  await page.unroute('**/api/backend?action=orders');
+  await form.locator('button[type=submit]').click();
+  await page.locator('[data-success-modal][open]').waitFor();
+  assert.match(await page.locator('[data-reopen-whatsapp]').getAttribute('href'), /^https:\/\/wa\.me\//);
+  const storedUrl = await page.evaluate(() => document.body.dataset.lastWhatsappUrl);
+  assert.match(decodeURIComponent(storedUrl), /38,00/);
+  assert.equal((await customer.request.get(`${origin}/api/backend?action=orders`)).status(), 401);
+  await page.locator('[data-close-success]').click();
+  await page.locator('[data-open-cart]').first().click();
+  await page.locator('[data-checkout]').click();
+  await form.locator('button[type=submit]').click();
+  await page.locator('[data-success-modal][open]').waitFor();
+
+  const staff = await browser.newContext({ viewport: { width: 1440, height: 980 } });
+  const admin = await staff.newPage();
+  admin.on('pageerror', error => errors.push(error.message));
+  await admin.goto(`${origin}/admin/`);
+  await admin.locator('#login-form').waitFor();
+  await admin.screenshot({ path: path.join(screenshots, 'admin-login.png') });
+  await admin.locator('[name=email]').fill('browser@example.com');
+  await admin.locator('[name=password]').fill(password);
+  await admin.locator('#login-form button').click();
+  await admin.locator('#orders tr').waitFor();
+  assert.equal(await admin.locator('#orders tr').count(), 1, 'Retry duplicated an order');
+  await noOverflow(admin);
+  await admin.screenshot({ path: path.join(screenshots, 'admin-desktop.png'), fullPage: true });
+  await admin.locator('.order-link').first().click();
+  await admin.locator('#next-status').waitFor();
+  assert.match(await admin.locator('#detail-body').innerText(), /Sem cebola/);
+  assert.equal(await admin.locator('#detail-body img').count(), 0, 'Unsafe HTML from customer');
+  await admin.locator('#next-status').selectOption('preparing');
+  await admin.locator('#status-form button').click();
+  await admin.waitForFunction(() => document.querySelector('.detail-meta .status')?.textContent === 'Em preparo');
+  await admin.screenshot({ path: path.join(screenshots, 'admin-detail-desktop.png') });
+  await admin.locator('#next-status').selectOption('ready');
+  await admin.locator('#status-form button').click();
+  await admin.waitForFunction(() => document.querySelector('.detail-meta .status')?.textContent === 'Pronto para retirada');
+  await admin.locator('#next-status').selectOption('delivered');
+  await admin.locator('#status-form button').click();
+  await admin.waitForFunction(() => document.querySelector('.detail-meta .status')?.textContent === 'Concluído');
+  assert.equal(await admin.locator('#status-form').isVisible(), false);
+  for (const width of [390, 320]) {
+    await admin.setViewportSize({ width, height: 844 });
+    await noOverflow(admin);
+    await admin.screenshot({ path: path.join(screenshots, `admin-detail-${width}.png`) });
+  }
+  await admin.locator('#close-detail').click();
+  await admin.setViewportSize({ width: 390, height: 844 });
+  await noOverflow(admin);
+  await admin.screenshot({ path: path.join(screenshots, 'admin-mobile.png'), fullPage: true });
+  await admin.reload();
+  await admin.locator('#orders tr').waitFor();
+  assert.match(await admin.locator('#orders').innerText(), /Concluído/);
+  await admin.locator('#logout').click();
+  await admin.locator('#login-view').waitFor();
+  assert.equal((await staff.request.get(`${origin}/api/backend?action=orders`)).status(), 401);
+  for (const privatePath of ['/.data/admin-access.txt', '/server/db.cjs', '/.env', '/tests/browser.cjs']) assert.equal((await staff.request.get(origin + privatePath)).status(), 404);
+  assert.deepEqual(errors, []);
+  console.log('PASS: storefront -> persistent order -> admin login -> status lifecycle -> reload -> logout. Desktop/mobile 390/320, no overflow or JS errors.');
+})().catch(error => { console.error(error); process.exitCode = 1; }).finally(async () => {
+  if (browser) await browser.close();
+  if (server && server.exitCode === null) { server.kill(); await new Promise(resolve => server.once('exit', resolve)); }
+  await db.close();
+  fs.rmSync(directory, { recursive: true });
+});

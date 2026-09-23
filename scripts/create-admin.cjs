@@ -1,0 +1,23 @@
+require('./env.cjs');
+const { randomBytes } = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const { hashPassword } = require('../server/auth.cjs');
+const { query, close } = require('../server/db.cjs');
+(async () => {
+  const online = process.argv.includes('--production');
+  if (online && !process.env.DATABASE_URL) throw new Error('Production admin requires DATABASE_URL. No local account was created.');
+  const email = (process.argv[2] || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) throw new Error('Usage: npm run admin:create -- equipe@example.com');
+  const existing = await query('SELECT email FROM admins WHERE email=$1', [email]);
+  if (existing.rows.length && !process.argv.includes('--reset')) throw new Error('Account exists. Use --reset to rotate its password and revoke all sessions.');
+  const password = randomBytes(24).toString('base64url');
+  const hash = await hashPassword(password);
+  await query('INSERT INTO admins(email,password_hash,created_at) VALUES($1,$2,$3) ON CONFLICT(email) DO UPDATE SET password_hash=$2', [email, hash, new Date().toISOString()]);
+  await query('DELETE FROM sessions WHERE email=$1', [email]);
+  const directory = path.join(__dirname, '..', '.data');
+  fs.mkdirSync(directory, { recursive: true });
+  const file = path.join(directory, online ? 'admin-access-production.txt' : 'admin-access.txt');
+  fs.writeFileSync(file, `Ambiente: ${online ? 'Produção' : 'Desenvolvimento'}\nE-mail: ${email}\nSenha: ${password}\n\nGuarde em um gerenciador de senhas. Este arquivo não deve ser publicado.\n`, { mode: 0o600 });
+  console.log(`Account created: ${email}\nCredentials saved locally: ${file}\nNo invitation or e-mail was sent.`);
+})().catch(error => { console.error(error.message); process.exitCode = 1; }).finally(close);
