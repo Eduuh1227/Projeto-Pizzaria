@@ -65,7 +65,35 @@ async function noOverflow(page) {
   await page.locator('[data-checkout]').click();
   const form = page.locator('[data-checkout-form]');
   await form.locator('[name=name]').fill('Cliente Teste Browser');
+  const phone = form.locator('[name=phone]');
+  await phone.fill('abc (11) 99999-9999');
+  assert.equal(await phone.inputValue(), '11999999999');
+  await phone.pressSequentially('abc-+ ');
+  assert.equal(await phone.inputValue(), '11999999999');
+  await phone.fill('');
+  await phone.focus();
+  await page.keyboard.insertText('+55 (11) 99999-9999');
+  assert.equal(await phone.inputValue(), '5511999999999');
+  await phone.evaluate(el => el.setSelectionRange(2, 2));
+  await page.keyboard.insertText('a7-');
+  assert.equal(await phone.inputValue(), '55711999999999');
+  assert.equal(await phone.evaluate(el => el.selectionStart), 3);
   await form.locator('[name=phone]').fill('11999999999');
+  await page.route('https://viacep.com.br/ws/05877200/json/', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ logradouro: 'Rua Cortegaca', bairro: 'Jardim Guaruja', localidade: 'São Paulo', uf: 'SP' }) }));
+  await form.locator('[name=cep]').fill('05877200');
+  await page.waitForFunction(() => document.querySelector('#cep-status').textContent.includes('Endereço encontrado'));
+  assert.equal(await form.locator('[name=street]').inputValue(), 'Rua Cortegaca');
+  for (const width of [1440, 390, 320]) {
+    await page.setViewportSize({ width, height: 1000 });
+    const cepBox = await form.locator('[name=cep]').boundingBox();
+    const streetBox = await form.locator('[name=street]').boundingBox();
+    assert.ok(Math.abs(cepBox.height - streetBox.height) < 1, 'Street input stretched after CEP lookup');
+    if (width === 1440) assert.ok(Math.abs(cepBox.y - streetBox.y) < 1, 'CEP and street inputs are misaligned');
+    assert.equal(await form.evaluate(el => el.scrollWidth <= el.clientWidth), true, 'Checkout overflows horizontally');
+    await form.locator('[name=street]').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(screenshots, `checkout-address-${width}.png`) });
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
   await form.locator('[name=fulfillment]').selectOption('pickup');
   await form.locator('[name=generalNotes]').fill('<img src=x onerror=alert(1)> Sem cebola, por favor.');
   for (const message of ['Failed to fetch', 'NetworkError when attempting to fetch resource.', 'Load failed']) {

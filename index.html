@@ -21,7 +21,7 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23A61B1B'/%3E%3Cpath d='M12 40c8-17 23-26 42-24-8 15-21 24-42 24Z' fill='%23F4B942'/%3E%3Cpath d='M21 36c5-8 14-13 25-14-5 7-13 12-25 14Z' fill='%23FFF2D8'/%3E%3Ccircle cx='30' cy='29' r='3' fill='%23D62828'/%3E%3Ccircle cx='40' cy='24' r='3' fill='%23278A35'/%3E%3Cpath d='M14 44h36' stroke='%23FFF2D8' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="style.css?v=20260916-checkout-2" />
+    <link rel="stylesheet" href="style.css?v=20260925-checkout-fields" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -270,7 +270,7 @@
 
         <div class="form-grid">
           <label>Nome completo<input name="name" required autocomplete="name" /></label>
-          <label>Telefone<input name="phone" required inputmode="tel" autocomplete="tel" /></label>
+          <label>Telefone<input type="tel" name="phone" required inputmode="numeric" pattern="[0-9]+" autocomplete="tel" /></label>
           <label class="span-2">Forma de recebimento
             <select name="fulfillment" required data-fulfillment>
               <option value="delivery">Entrega</option>
@@ -337,6 +337,6 @@
     <div class="toast" data-toast aria-live="polite"></div>
 
     <script src="catalog.js"></script>
-    <script src="script.js?v=20260925-file-entry"></script>
+    <script src="script.js?v=20260925-checkout-fields"></script>
   </body>
 </html>

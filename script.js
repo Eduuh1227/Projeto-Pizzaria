@@ -176,6 +176,17 @@ function bindEvents() {
   });
   els.payment.addEventListener("change", updatePaymentVisibility);
   els.payment.addEventListener("input", updatePaymentVisibility);
+  const phone = els.checkoutForm.elements.phone;
+  function sanitizePhone() {
+    const value = phone.value;
+    const digits = value.replace(/\D/g, "");
+    if (value === digits) return;
+    const cursor = value.slice(0, phone.selectionStart ?? value.length).replace(/\D/g, "").length;
+    phone.value = digits;
+    phone.setSelectionRange(cursor, cursor);
+  }
+  phone.addEventListener("input", sanitizePhone);
+  phone.addEventListener("change", sanitizePhone);
   bindCepLookup();
   els.checkoutForm.addEventListener("submit", handleCheckout);
 
