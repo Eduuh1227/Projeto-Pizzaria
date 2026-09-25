@@ -39,6 +39,8 @@ async function checkInfoCarousel(page) {
   assert.equal(await strip.locator('.info-group').count(), 2);
   assert.equal(await strip.locator('.info-group[aria-hidden=true][inert]').count(), 1);
   assert.equal(await strip.locator('button').count(), 0);
+  assert.deepEqual(await strip.locator('.info-group:not([aria-hidden]) .info-value').allTextContents(), [CONFIG.business.deliveryTime, 'Pix, dinheiro e cartões', 'No balcão', CONFIG.business.hoursNote]);
+  await page.waitForFunction(() => [...document.querySelectorAll('.info-icon img')].every(img => img.complete && img.naturalWidth > 0));
   for (const width of [320, 390, 768, 1440, 2560]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.waitForFunction(() => {
@@ -55,30 +57,36 @@ async function checkInfoCarousel(page) {
       animation.pause();
       const duration = animation.effect.getTiming().duration;
       const bounds = el.getBoundingClientRect();
+      const gap = parseFloat(getComputedStyle(el).getPropertyValue('--info-gap'));
       const samples = [0, 0.25, 0.5, 0.75, 0.99999, 1].map(progress => {
         animation.currentTime = duration * progress;
         const items = [...track.querySelectorAll('article')].map(item => {
           const rect = item.getBoundingClientRect();
           return { left: rect.left, right: rect.right, top: rect.top, height: rect.height, fits: item.scrollWidth <= item.clientWidth && item.scrollHeight <= item.clientHeight };
         });
-        return { progress, leftGap: items[0].left - bounds.left, rightGap: bounds.right - items.at(-1).right, aligned: items.every((item, i) => item.fits && Math.abs(item.top - items[0].top) < 1 && Math.abs(item.height - items[0].height) < 1 && (!i || item.left - items[i - 1].right < 1.1)) };
+        return { progress, leftGap: items[0].left - bounds.left, rightGap: bounds.right - items.at(-1).right, aligned: items.every((item, i) => item.fits && Math.abs(item.top - items[0].top) < 1 && Math.abs(item.height - items[0].height) < 1 && (!i || Math.abs(item.left - items[i - 1].right - gap) < 0.1)) };
       });
       function visibleAt(time) {
         animation.currentTime = time;
-        return [...track.querySelectorAll('article')].map(item => ({ title: item.querySelector('span').textContent, left: item.getBoundingClientRect().left, right: item.getBoundingClientRect().right })).filter(item => item.right > bounds.left + 4 && item.left < bounds.right - 4);
+        return [...track.querySelectorAll('article')].map(item => ({ title: item.querySelector('.info-label').textContent, left: item.getBoundingClientRect().left, right: item.getBoundingClientRect().right })).filter(item => item.right > bounds.left + 4 && item.left < bounds.right - 4);
       }
       const before = visibleAt(duration - 0.01);
       const after = visibleAt(duration + 0.01);
       animation.currentTime = 0;
-      return { samples, before, after };
+      return { samples, before, after, gap };
     });
-    assert.ok(result.samples.every(sample => sample.leftGap <= 1.1 && sample.rightGap <= 2.1 && sample.aligned), `Empty space, clipping or misalignment at ${width}px: ${JSON.stringify(result.samples)}`);
+    assert.ok(result.samples.every(sample => sample.leftGap <= 1.1 && sample.rightGap <= result.gap + 1.1 && sample.aligned), `Empty space, clipping or misalignment at ${width}px: ${JSON.stringify(result.samples)}`);
     assert.deepEqual(result.before.map(item => item.title), result.after.map(item => item.title), 'Loop changed visible content');
     result.before.forEach((item, i) => assert.ok(Math.abs(item.left - result.after[i].left) < 0.1, 'Visible jump at loop boundary'));
     await noOverflow(page);
     await strip.screenshot({ path: path.join(screenshots, `info-carousel-${width}.png`) });
     await page.locator('.info-track').evaluate(el => el.getAnimations()[0].play());
   }
+  await page.locator('.info-track').evaluate(el => { const animation = el.getAnimations()[0]; animation.pause(); animation.currentTime = 0; });
+  const firstCard = strip.locator('.info-card').first();
+  await firstCard.hover();
+  await page.waitForFunction(() => new DOMMatrixReadOnly(getComputedStyle(document.querySelector('.info-card')).transform).m42 < -3.9);
+  await page.mouse.move(0, 0);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const width of [390, 1440]) {
     await page.setViewportSize({ width, height: 1000 });

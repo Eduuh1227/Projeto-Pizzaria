@@ -417,15 +417,13 @@ h3 {
 
 .info-strip {
   --info-track-width: 200%;
+  --info-gap: 16px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1px;
+  gap: var(--info-gap);
   overflow: hidden;
   margin: 0 clamp(16px, 5vw, 70px) 72px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--line);
-  box-shadow: 0 12px 34px rgba(59, 33, 24, 0.07);
+  padding-block: 16px 24px;
 }
 
 .info-track,
@@ -438,6 +436,10 @@ h3 {
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  .info-strip {
+    animation: infoArrival 550ms ease-out both;
+  }
+
   .info-strip.has-carousel {
     display: block;
   }
@@ -454,8 +456,8 @@ h3 {
     flex: 0 0 50%;
     min-width: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1px;
-    padding-right: 1px;
+    gap: var(--info-gap);
+    padding-right: var(--info-gap);
   }
 }
 
@@ -464,24 +466,117 @@ h3 {
   to { transform: translateX(-50%); }
 }
 
-.info-strip article {
-  min-height: 98px;
-  background: rgba(255, 255, 255, 0.82);
-  padding: 18px;
+@keyframes infoArrival {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.info-strip span,
+.info-card {
+  --card-accent: #a12325;
+  min-width: 0;
+  min-height: 224px;
+  padding: 24px;
+  border: 1px solid #e8ddd3;
+  border-top: 3px solid var(--card-accent);
+  border-radius: 8px;
+  background: #fffaf5;
+  color: #3b3028;
+  box-shadow: 0 6px 16px rgba(59, 33, 24, 0.08);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.info-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.info-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(161, 35, 37, 0.08);
+}
+
+.info-icon img {
+  width: 28px;
+  height: 28px;
+}
+
+.info-label {
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.info-value {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-wrap: pretty;
+}
+
+.info-card--delivery {
+  border-color: #a12325;
+  background: #a12325;
+  color: #fff7ec;
+}
+
+.info-card--delivery .info-value {
+  font-size: 2rem;
+}
+
+.info-card--delivery .info-icon {
+  background: rgba(255, 247, 236, 0.12);
+}
+
+.info-card--pickup {
+  --card-accent: #285442;
+  border-color: #d9e3d4;
+  border-top-color: var(--card-accent);
+  background: #eff4eb;
+  color: #285442;
+}
+
+.info-card--pickup .info-icon {
+  background: rgba(40, 84, 66, 0.08);
+}
+
+.info-card--hours {
+  border-color: #244a3b;
+  background: #244a3b;
+  color: #fff7ec;
+}
+
+.info-card--hours .info-icon {
+  background: rgba(239, 207, 136, 0.12);
+}
+
+.info-card--hours .info-value {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .info-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px rgba(59, 33, 24, 0.16);
+  }
+}
+
 .cart-summary span {
   color: var(--muted);
   font-size: 0.86rem;
   font-weight: 800;
-}
-
-.info-strip strong {
-  display: block;
-  margin-top: 8px;
-  color: var(--brown);
-  line-height: 1.2;
 }
 
 .menu-section,
@@ -1435,7 +1530,7 @@ dialog::backdrop {
 
   .info-strip {
     --info-track-width: 680%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     margin-bottom: 32px;
   }
 
