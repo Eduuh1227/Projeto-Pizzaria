@@ -6,6 +6,7 @@ const WHATSAPP_NUMBER = "5511990073671";
 const CONFIG = {
   business: {
     name: "Pizzaria Realeza",
+    siteUrl: "https://projeto-pizzaria-mu.vercel.app/",
     phone: "(11) 99007-3671",
     whatsapp: "(11) 99007-3671",
     instagram: "@pizzariarealeza",

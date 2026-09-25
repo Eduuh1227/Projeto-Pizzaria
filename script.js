@@ -15,6 +15,10 @@ let memoryCart = [];
 document.addEventListener("DOMContentLoaded", init);
 
 function init() {
+  if (window.location.protocol === "file:") {
+    window.location.replace(CONFIG.business.siteUrl);
+    return;
+  }
   cacheElements();
   hydrateBusinessInfo();
   renderCategories();
@@ -763,7 +767,8 @@ async function handleCheckout(event) {
     els.checkoutModal.close();
     els.successModal.showModal();
   } catch (error) {
-    showCheckoutError(error.name === "TimeoutError" ? "O envio demorou. Tente novamente; o pedido não será duplicado." : error.message === "Failed to fetch" ? "Sem conexão. Confira sua internet e tente novamente." : error.message);
+    const networkError = /^(Failed to fetch|NetworkError when attempting to fetch resource\.?|Load failed)$/i.test(error.message);
+    showCheckoutError(error.name === "TimeoutError" ? "O envio demorou. Tente novamente; o pedido não será duplicado." : networkError ? "Não foi possível conectar ao serviço de pedidos. Seu carrinho foi mantido; confira sua conexão e tente novamente." : error.message);
   } finally {
     submittingOrder = false;
     button.disabled = false;

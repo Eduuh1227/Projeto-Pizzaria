@@ -6,6 +6,8 @@ const path = require('node:path');
 const os = require('node:os');
 const net = require('node:net');
 const { randomUUID } = require('node:crypto');
+const { pathToFileURL } = require('node:url');
+const { CONFIG } = require('../catalog.js');
 delete process.env.DATABASE_URL;
 delete process.env.VERCEL;
 process.env.NODE_ENV = 'test';
@@ -44,6 +46,14 @@ async function noOverflow(page) {
   });
   browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}) });
   const errors = [];
+  const localFile = await browser.newPage();
+  localFile.on('pageerror', error => errors.push(error.message));
+  await localFile.route('https://**/*', route => route.abort());
+  await localFile.route(CONFIG.business.siteUrl, route => route.fulfill({ contentType: 'text/html', body: '<h1>Site online</h1>' }));
+  await localFile.goto(pathToFileURL(path.join(root, 'index.html')).href);
+  await localFile.waitForURL(CONFIG.business.siteUrl);
+  assert.equal(await localFile.locator('h1').innerText(), 'Site online');
+  await localFile.close();
   const customer = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await customer.newPage();
   page.on('pageerror', error => errors.push(error.message));
@@ -58,6 +68,20 @@ async function noOverflow(page) {
   await form.locator('[name=phone]').fill('11999999999');
   await form.locator('[name=fulfillment]').selectOption('pickup');
   await form.locator('[name=generalNotes]').fill('<img src=x onerror=alert(1)> Sem cebola, por favor.');
+  for (const message of ['Failed to fetch', 'NetworkError when attempting to fetch resource.', 'Load failed']) {
+    await page.evaluate(message => {
+      window.originalFetch = window.fetch;
+      window.fetch = (...args) => String(args[0]).includes('/api/backend?action=orders')
+        ? Promise.reject(new TypeError(message)) : window.originalFetch(...args);
+    }, message);
+    await form.locator('button[type=submit]').click();
+    await form.locator('[data-checkout-error]:not([hidden])').waitFor();
+    assert.match(await form.locator('[data-checkout-error]').innerText(), /Seu carrinho foi mantido/);
+    assert.equal(await form.locator('button[type=submit]').isEnabled(), true);
+    assert.equal(await page.locator('[data-success-modal]').isVisible(), false);
+    assert.equal(await form.locator('[name=name]').inputValue(), 'Cliente Teste Browser');
+    await page.evaluate(() => { window.fetch = window.originalFetch; delete window.originalFetch; });
+  }
   await page.route('**/api/backend?action=orders', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Conexão temporariamente indisponível.' }) }));
   await form.locator('button[type=submit]').click();
   await form.locator('[data-checkout-error]:not([hidden])').waitFor();

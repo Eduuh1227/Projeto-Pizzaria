@@ -13,7 +13,8 @@ npm run dev
 
 Site: http://127.0.0.1:4181/ | Equipe: http://127.0.0.1:4181/admin/
 
-Agora e necessario executar o servidor; abrir o HTML diretamente nao registra pedidos.
+Abrir o HTML diretamente redireciona para https://projeto-pizzaria-mu.vercel.app/.
+Para desenvolver e testar localmente, execute o servidor com `npm run dev`.
 Sem `DATABASE_URL`, o desenvolvimento utiliza SQLite em `.data/realeza.sqlite`.
 O banco local persiste entre reinicializacoes, mas nunca e usado na Vercel.
 
