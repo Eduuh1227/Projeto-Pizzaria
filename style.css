@@ -416,6 +416,7 @@ h3 {
 }
 
 .info-strip {
+  --info-track-width: 200%;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
@@ -425,6 +426,42 @@ h3 {
   border-radius: 8px;
   background: var(--line);
   box-shadow: 0 12px 34px rgba(59, 33, 24, 0.07);
+}
+
+.info-track,
+.info-group {
+  display: contents;
+}
+
+.info-group[aria-hidden="true"] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .info-strip.has-carousel {
+    display: block;
+  }
+
+  .info-track {
+    display: flex;
+    width: var(--info-track-width);
+    animation: infoConveyor var(--info-duration, 45s) linear infinite;
+    will-change: transform;
+  }
+
+  .info-track .info-group {
+    display: grid;
+    flex: 0 0 50%;
+    min-width: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    padding-right: 1px;
+  }
+}
+
+@keyframes infoConveyor {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 
 .info-strip article {
@@ -1326,6 +1363,7 @@ dialog::backdrop {
   }
 
   .info-strip {
+    --info-track-width: 400%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1396,6 +1434,7 @@ dialog::backdrop {
   }
 
   .info-strip {
+    --info-track-width: 680%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-bottom: 32px;
   }

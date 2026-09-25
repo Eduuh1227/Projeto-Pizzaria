@@ -21,6 +21,7 @@ function init() {
   }
   cacheElements();
   hydrateBusinessInfo();
+  initInfoCarousel();
   renderCategories();
   renderProducts();
   renderHoursList();
@@ -100,6 +101,31 @@ function hydrateBusinessInfo() {
 function setText(key, value) {
   const el = els[`config-${key}`];
   if (el) el.textContent = value;
+}
+
+function initInfoCarousel() {
+  const strip = document.querySelector(".info-strip");
+  if (!strip || strip.querySelector(".info-track")) return;
+  const track = document.createElement("div");
+  track.className = "info-track";
+  const group = document.createElement("div");
+  group.className = "info-group";
+  group.append(...strip.children);
+  const copy = group.cloneNode(true);
+  copy.setAttribute("aria-hidden", "true");
+  copy.setAttribute("inert", "");
+  copy.querySelectorAll("[data-config]").forEach(el => el.removeAttribute("data-config"));
+  track.append(group, copy);
+  strip.append(track);
+  strip.classList.add("has-carousel");
+
+  // Each half is identical; travel one half at a steady 32 pixels per second.
+  function updateSpeed() {
+    const width = track.getBoundingClientRect().width;
+    if (width) track.style.setProperty("--info-duration", `${width / 2 / 32}s`);
+  }
+  updateSpeed();
+  new ResizeObserver(updateSpeed).observe(track);
 }
 
 function bindEvents() {

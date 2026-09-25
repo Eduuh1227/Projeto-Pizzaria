@@ -32,6 +32,64 @@ async function noOverflow(page) {
     assert.equal(await page.locator('#detail').evaluate(el => el.scrollWidth <= el.clientWidth), true, 'Detail drawer overflows');
   }
 }
+async function checkInfoCarousel(page) {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const strip = page.locator('.info-strip');
+  await strip.scrollIntoViewIfNeeded();
+  assert.equal(await strip.locator('.info-group').count(), 2);
+  assert.equal(await strip.locator('.info-group[aria-hidden=true][inert]').count(), 1);
+  assert.equal(await strip.locator('button').count(), 0);
+  for (const width of [320, 390, 768, 1440, 2560]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.waitForFunction(() => {
+      const track = document.querySelector('.info-track');
+      const animation = track.getAnimations()[0];
+      return animation && Math.abs(animation.effect.getTiming().duration - track.getBoundingClientRect().width / 64 * 1000) < 2;
+    });
+    await page.evaluate(() => document.querySelector('.info-track').getAnimations()[0].play());
+    const start = await page.locator('.info-track').evaluate(el => el.getAnimations()[0].currentTime);
+    await page.waitForFunction(start => document.querySelector('.info-track').getAnimations()[0].currentTime > start + 150, start);
+    const result = await strip.evaluate(el => {
+      const track = el.querySelector('.info-track');
+      const animation = track.getAnimations()[0];
+      animation.pause();
+      const duration = animation.effect.getTiming().duration;
+      const bounds = el.getBoundingClientRect();
+      const samples = [0, 0.25, 0.5, 0.75, 0.99999, 1].map(progress => {
+        animation.currentTime = duration * progress;
+        const items = [...track.querySelectorAll('article')].map(item => {
+          const rect = item.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, top: rect.top, height: rect.height, fits: item.scrollWidth <= item.clientWidth && item.scrollHeight <= item.clientHeight };
+        });
+        return { progress, leftGap: items[0].left - bounds.left, rightGap: bounds.right - items.at(-1).right, aligned: items.every((item, i) => item.fits && Math.abs(item.top - items[0].top) < 1 && Math.abs(item.height - items[0].height) < 1 && (!i || item.left - items[i - 1].right < 1.1)) };
+      });
+      function visibleAt(time) {
+        animation.currentTime = time;
+        return [...track.querySelectorAll('article')].map(item => ({ title: item.querySelector('span').textContent, left: item.getBoundingClientRect().left, right: item.getBoundingClientRect().right })).filter(item => item.right > bounds.left + 4 && item.left < bounds.right - 4);
+      }
+      const before = visibleAt(duration - 0.01);
+      const after = visibleAt(duration + 0.01);
+      animation.currentTime = 0;
+      return { samples, before, after };
+    });
+    assert.ok(result.samples.every(sample => sample.leftGap <= 1.1 && sample.rightGap <= 2.1 && sample.aligned), `Empty space, clipping or misalignment at ${width}px: ${JSON.stringify(result.samples)}`);
+    assert.deepEqual(result.before.map(item => item.title), result.after.map(item => item.title), 'Loop changed visible content');
+    result.before.forEach((item, i) => assert.ok(Math.abs(item.left - result.after[i].left) < 0.1, 'Visible jump at loop boundary'));
+    await noOverflow(page);
+    await strip.screenshot({ path: path.join(screenshots, `info-carousel-${width}.png`) });
+    await page.locator('.info-track').evaluate(el => el.getAnimations()[0].play());
+  }
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const width of [390, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    assert.equal(await page.locator('.info-track').evaluate(el => el.getAnimations().length), 0);
+    assert.equal(await strip.locator('article:visible').count(), 4);
+    assert.equal(await strip.evaluate(el => el.scrollWidth <= el.clientWidth), true);
+    await strip.screenshot({ path: path.join(screenshots, `info-reduced-motion-${width}.png`) });
+  }
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.setViewportSize({ width: 390, height: 844 });
+}
 (async () => {
   fs.mkdirSync(screenshots, { recursive: true });
   const password = randomUUID();
@@ -59,6 +117,7 @@ async function noOverflow(page) {
   page.on('pageerror', error => errors.push(error.message));
   await page.route('https://**/*', route => route.abort());
   await page.goto(`${origin}/?test=1`);
+  await checkInfoCarousel(page);
   await page.getByRole('button', { name: 'Adicionar Calabresa', exact: true }).click();
   await page.locator('[data-product-form] button[type=submit]').click();
   await page.locator('[data-open-cart]').first().click();
